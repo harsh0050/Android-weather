@@ -1,119 +1,138 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/layout"
-    xmlns:tools="http://schemas.android.com/tools">
+<!--<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--    xmlns:tools="http://schemas.android.com/tools"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent">-->
 
-    <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="75dp"
-        android:background="@drawable/rectangle_bg"
-        android:orientation="horizontal"
-        android:padding="5dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <AutoCompleteTextView
-            android:id="@+id/location_edit_text"
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
-            android:hint="Location"
-            android:padding="10dp"
-            android:textSize="20sp" />
-
-        <ImageView
-            android:id="@+id/search_button"
+        <LinearLayout
+            android:id="@+id/linearLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true"
-            android:src="@drawable/baseline_search_24"
-            android:foreground="?android:selectableItemBackground"/>
+            android:layout_marginTop="15dp"
+            android:background="@drawable/rectangle_bg"
+            android:orientation="horizontal"
+            android:padding="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/enable_suggestion_switch">
 
-    </LinearLayout>
+            <ImageView
+                android:id="@+id/current_location_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:selectableItemBackground"
+                android:src="@drawable/baseline_my_location_24" />
 
-    <TextView
-        android:id="@+id/showing_result_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        app:layout_constraintHorizontal_bias="0"
-        app:layout_constrainedWidth="true"
-        app:layout_constraintEnd_toEndOf="@+id/linearLayout"
-        app:layout_constraintStart_toStartOf="@+id/linearLayout"
-        app:layout_constraintTop_toBottomOf="@id/linearLayout"
-        tools:text="Showing Weather of: New Delhi" />
-    <ImageView
-        android:id="@+id/weather_image_view"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="10dp"
-        tools:src="@tools:sample/avatars"
-        app:layout_constraintBottom_toTopOf="@+id/guideline3"
-        app:layout_constraintEnd_toEndOf="@+id/linearLayout"
-        app:layout_constraintStart_toStartOf="@+id/linearLayout"
-        app:layout_constraintTop_toBottomOf="@+id/showing_result_text_view" />
+            <AutoCompleteTextView
+                android:id="@+id/location_edit_text"
+                android:layout_width="270dp"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:hint="Location"
+                android:padding="10dp"
+                android:textSize="20sp" />
 
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="@+id/weather_image_view"
-        app:layout_constraintEnd_toEndOf="@+id/weather_image_view"
-        app:layout_constraintStart_toStartOf="@+id/weather_image_view"
-        app:layout_constraintTop_toTopOf="@+id/weather_image_view" />
+            <ImageView
+                android:id="@+id/search_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:selectableItemBackground"
+                android:src="@drawable/baseline_search_24" />
 
-    <ImageView
-        android:id="@+id/weather_icon"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="20dp"
-        tools:src="@tools:sample/avatars"
-        app:layout_constraintStart_toStartOf="@+id/weather_image_view"
-        app:layout_constraintTop_toTopOf="@+id/guideline3" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/showing_result_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="@+id/linearLayout"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toStartOf="@+id/linearLayout"
+            app:layout_constraintTop_toBottomOf="@id/linearLayout"
+            tools:text="Showing Weather of: New Delhi" />
+
+        <ImageView
+            android:id="@+id/weather_image_view"
+            android:layout_width="0dp"
+            android:layout_height="480dp"
+            android:layout_marginTop="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0"
+            app:layout_constraintEnd_toEndOf="@+id/linearLayout"
+            app:layout_constraintStart_toStartOf="@+id/linearLayout"
+            app:layout_constraintTop_toBottomOf="@+id/showing_result_text_view"
+            tools:src="@tools:sample/avatars" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/weather_image_view"
+            app:layout_constraintEnd_toEndOf="@+id/weather_image_view"
+            app:layout_constraintStart_toStartOf="@+id/weather_image_view"
+            app:layout_constraintTop_toTopOf="@+id/weather_image_view" />
+
+        <ImageView
+            android:id="@+id/weather_icon"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="20dp"
+            app:layout_constraintStart_toStartOf="@+id/weather_image_view"
+            app:layout_constraintTop_toBottomOf="@+id/weather_image_view"
+            tools:src="@tools:sample/avatars" />
 
     <TextView
         android:id="@+id/degrees_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="25sp"
         android:layout_marginStart="15dp"
+        android:textSize="23sp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="@+id/weather_image_view"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/weather_icon"
         app:layout_constraintTop_toTopOf="@+id/weather_icon"
         tools:text="Temperature: 12 `C / 48 F" />
 
-    <TextView
-        android:id="@+id/weather_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="@+id/degrees_text_view"
-        app:layout_constraintTop_toBottomOf="@+id/degrees_text_view"
-        tools:text="Cloudy" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.85" />
-
-    <Switch
-        android:id="@+id/enable_suggestion_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:checked="false"
-        android:text="City Suggestion "
-        app:layout_constraintEnd_toEndOf="@+id/linearLayout"
-        app:layout_constraintTop_toTopOf="parent"
-        app:showText="true" />
+        <TextView
+            android:id="@+id/weather_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="@+id/degrees_text_view"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toStartOf="@+id/degrees_text_view"
+            app:layout_constraintTop_toBottomOf="@+id/degrees_text_view"
+            tools:text="Cloudy" />
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <Switch
+            android:id="@+id/enable_suggestion_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:checked="false"
+            android:text="City Suggestion "
+            app:layout_constraintEnd_toEndOf="@+id/linearLayout"
+            app:layout_constraintTop_toTopOf="parent"
+            app:showText="true" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+<!--</ScrollView>-->

@@ -35,6 +35,7 @@ class MainViewModel @Inject constructor(private val useCase: WeatherUseCase) : V
         return useCase.getWeatherData(city).asLiveData()
     }
 
+
     fun getImage(prompt: String, callback: IWeatherImageCallback){
         val service = retrofitClient.create(ImageGenerationService::class.java)
         service.getImage(prompt).enqueue(object:Callback<JsonObject>{

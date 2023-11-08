@@ -1,7 +1,7 @@
 package com.zimmy.sample.weather_compose.di
 
-import com.weather.forecast.clearsky.network.WeatherApiService
 import com.weather.forecast.clearsky.network.NetworkingConstants
+import com.weather.forecast.clearsky.network.WeatherApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
