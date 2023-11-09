@@ -181,8 +181,23 @@ class MainActivity : ComponentActivity() {
                         ?.toInt() ?: 0)
                     val weatherText = it.data?.current?.condition?.text.toString()//cloudy
                     val weatherIcon = "https:" + it.data?.current?.condition?.icon
+
+                    val name = it.data?.location?.name?.let{str->
+                        if(str.isNotBlank()){
+                            "$str, "
+                        }else{
+                            str
+                        }
+                    }
+                    val region = it.data?.location?.region?.let{str->
+                        if(str.isNotBlank()){
+                            "$str, "
+                        }else{
+                            str
+                        }
+                    }
                     val displayLocation =
-                        it.data?.location?.name + ", " + it.data?.location?.region + ", " + it.data?.location?.country
+                        "$name$region${it.data?.location?.country}"
 
                     binding.degreesTextView.text = getString(R.string.temperature, tempC, tempF)
                     binding.weatherText.text = getString(R.string.weather_text, weatherText)
@@ -220,7 +235,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun generateImage(imgPrompt: String) {
+    private fun generateImage(prompt: String) {
+        var imgPrompt = prompt
+        if(imgPrompt == "sunny"){
+            imgPrompt = "sunny sky"
+        }
         viewModel.getImage(formatText("$imgPrompt weather")).observe(this) {
             when (it) {
                 is ResultData.Failed -> {
@@ -240,7 +259,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     private fun setupImageIntoWeatherImageView(url: String) {
         binding.progressBar.visibility = View.VISIBLE
         Glide.with(applicationContext).load(url).centerCrop()
@@ -252,6 +270,7 @@ class MainActivity : ComponentActivity() {
                     isFirstResource: Boolean,
                 ): Boolean {
                     binding.progressBar.visibility = View.GONE
+                    Log.i("debug", "onLoadFailed: ${e?.causes}")
                     setupImageIntoWeatherImageView(R.drawable.cat)
                     return false
                 }
