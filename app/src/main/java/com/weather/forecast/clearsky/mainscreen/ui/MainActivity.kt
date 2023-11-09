@@ -24,7 +24,6 @@ import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
 import com.weather.forecast.clearsky.R
 import com.weather.forecast.clearsky.databinding.ActivityMainBinding
-import com.weather.forecast.clearsky.interfaces.IWeatherImageCallback
 import com.weather.forecast.clearsky.mainscreen.viewmodel.MainViewModel
 import com.weather.forecast.clearsky.network.ResultData
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,8 +33,8 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel by viewModels<MainViewModel>()
     private lateinit var binding: ActivityMainBinding
-    private lateinit var connectivityManager:ConnectivityManager
-    private lateinit var locationLauncher : ActivityResultLauncher<Array<String>>
+    private lateinit var connectivityManager: ConnectivityManager
+    private lateinit var locationLauncher: ActivityResultLauncher<Array<String>>
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,8 +71,11 @@ class MainActivity : ComponentActivity() {
                         LocationServices.getFusedLocationProviderClient(this@MainActivity)
                     service.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                         .addOnSuccessListener { location ->
-                            if(location!=null)
-                                setWeatherData("${location.latitude},${location.longitude}", true)
+                            if (location != null)
+                                setFinalWeatherData(
+                                    "${location.latitude},${location.longitude}",
+                                    true
+                                )
                             else
                                 Toast.makeText(
                                     applicationContext,
@@ -101,16 +103,11 @@ class MainActivity : ComponentActivity() {
         }
 
         binding.searchButton.setOnClickListener {
-            Log.i("Harsh", "Clicked");
             val inputLocation = binding.locationEditText.text.toString()
 
             if (connectivityManager.activeNetwork != null) {
                 if (inputLocation.isNotBlank()) {
-                    binding.progressBar.visibility = View.VISIBLE
-                    viewModel.checkLocation(inputLocation) { loc ->
-                        binding.progressBar.visibility = View.GONE
-                        setWeatherData(loc, false)
-                    }
+                    setWeatherData(inputLocation)
                 } else {
                     Toast.makeText(applicationContext, "Type Something.", Toast.LENGTH_SHORT).show()
                 }
@@ -120,13 +117,34 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
         binding.currentLocationButton.setOnClickListener {
             getCurrentLocationWeather()
         }
     }
 
-    private fun getCurrentLocationWeather(){
+    private fun setWeatherData(inputLocation: String) {
+        //corrects the input location before calling setFinalWeatherData
+        //called when search button is clicked
+        viewModel.correctLocation(inputLocation).observe(this) {
+            when (it) {
+                is ResultData.Failed -> {
+                    binding.progressBar.visibility = View.GONE
+                    setFinalWeatherData(inputLocation, false)
+                }
+
+                is ResultData.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                }
+
+                is ResultData.Success -> {
+                    binding.progressBar.visibility = View.GONE
+                    setFinalWeatherData(it.data!!.location, false)
+                }
+            }
+        }
+    }
+
+    private fun getCurrentLocationWeather() {
         val locationRequest = LocationRequest
             .Builder(Priority.PRIORITY_LOW_POWER, 10000)
             .build()
@@ -147,9 +165,9 @@ class MainActivity : ComponentActivity() {
                     .show()
         }
     }
-    private fun setWeatherData(inputLocation: String, isCurrentLocation: Boolean) {
-        binding.progressBar.visibility = View.VISIBLE
-        viewModel.getWeatherData(inputLocation).observe(this) {
+
+    private fun setFinalWeatherData(location: String, isCurrentLocation: Boolean) {
+        viewModel.getWeatherData(location).observe(this) {
             when (it) {
                 is ResultData.Success -> {
                     val tempC = (it.data?.current?.temp_c?.toString()?.split(" ")
@@ -163,18 +181,19 @@ class MainActivity : ComponentActivity() {
                         ?.toInt() ?: 0)
                     val weatherText = it.data?.current?.condition?.text.toString()//cloudy
                     val weatherIcon = "https:" + it.data?.current?.condition?.icon
-                    val location =
+                    val displayLocation =
                         it.data?.location?.name + ", " + it.data?.location?.region + ", " + it.data?.location?.country
 
-                    binding.degreesTextView.text = "Temperature: $tempC °C / $tempF F"
-                    binding.weatherText.text = "($weatherText)"
-                    binding.showingResultTextView.text = "Showing Results for $location"
+                    binding.degreesTextView.text = getString(R.string.temperature, tempC, tempF)
+                    binding.weatherText.text = getString(R.string.weather_text, weatherText)
+                    binding.showingResultTextView.text =
+                        getString(R.string.showing_results_for, displayLocation)
 
                     println(weatherIcon)
                     Glide.with(applicationContext).load(weatherIcon).centerCrop()
                         .into(binding.weatherIcon)
 
-
+                    binding.progressBar.visibility = View.GONE
                     if (!isCurrentLocation) {
                         generateImage(weatherText)
                     } else {
@@ -194,6 +213,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 is ResultData.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
                     Log.d("TAG", "onCreate: Loading")
                 }
             }
@@ -201,31 +221,28 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun generateImage(imgPrompt: String) {
-        viewModel.getImage(formatText("$imgPrompt weather"), object : IWeatherImageCallback {
-            override fun onSuccess(url: String) {
-                setupImageIntoWeatherImageView(url)
-            }
+        viewModel.getImage(formatText("$imgPrompt weather")).observe(this) {
+            when (it) {
+                is ResultData.Failed -> {
+                    binding.progressBar.visibility = View.GONE
+                    setupImageIntoWeatherImageView(R.drawable.cat)
+                }
 
-            override fun onFailure(e: Throwable) {
-                setupImageIntoWeatherImageView(R.drawable.cat)
-                Log.i("Volley", e.toString())
-            }
-        })
-    }
+                is ResultData.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                }
 
-    private fun formatText(text: String): String {
-        var ans = ""
-        for (ch in text.toCharArray()) {
-            if (ch == ' ') {
-                ans += "%20"
-            } else {
-                ans += ch
+                is ResultData.Success -> {
+                    binding.progressBar.visibility = View.GONE
+                    setupImageIntoWeatherImageView(it.data!!.url)
+                }
             }
         }
-        return ans
     }
 
+
     private fun setupImageIntoWeatherImageView(url: String) {
+        binding.progressBar.visibility = View.VISIBLE
         Glide.with(applicationContext).load(url).centerCrop()
             .listener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(
@@ -234,6 +251,7 @@ class MainActivity : ComponentActivity() {
                     target: Target<Drawable>,
                     isFirstResource: Boolean,
                 ): Boolean {
+                    binding.progressBar.visibility = View.GONE
                     setupImageIntoWeatherImageView(R.drawable.cat)
                     return false
                 }
@@ -252,6 +270,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setupImageIntoWeatherImageView(resId: Int) {
+        binding.progressBar.visibility = View.VISIBLE
         Glide.with(applicationContext).load(resId)
             .addListener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(
@@ -278,13 +297,23 @@ class MainActivity : ComponentActivity() {
             .into(binding.weatherImageView)
     }
 
+    private fun formatText(text: String): String {
+        var ans = ""
+        for (ch in text.toCharArray()) {
+            if (ch == ' ') {
+                ans += "%20"
+            } else {
+                ans += ch
+            }
+        }
+        return ans
+    }
 
     companion object {
         val REQUIRED_PERMISSIONS = arrayOf(
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
             android.Manifest.permission.ACCESS_FINE_LOCATION
         )
-        const val GPS_REQUEST_CODE = 1
     }
 
 }

@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Clear Sky</string>
+    <string name="temperature">Temperature: %1$d °C / %2$d F</string>
+    <string name="weather_text">(%1$s)</string>
+    <string name="showing_results_for">Showing Results for %1$s</string>
+    <string name="location">Location</string>
+    <string name="weather_image">weather image</string>
+    <string name="city_suggestion">City Suggestion</string>
+    <string name="weather_icon">weather icon</string>
+    <string name="search">search</string>
+    <string name="current_location">current location</string>
 </resources>

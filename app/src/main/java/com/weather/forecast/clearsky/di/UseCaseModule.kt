@@ -1,4 +1,4 @@
-package com.zimmy.sample.weather_compose.di
+package com.weather.forecast.clearsky.di
 
 import com.weather.forecast.clearsky.repository.WeatherRepository
 import com.weather.forecast.clearsky.usecase.WeatherUseCase
