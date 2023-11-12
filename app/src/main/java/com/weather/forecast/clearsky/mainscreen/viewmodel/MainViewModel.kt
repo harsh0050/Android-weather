@@ -25,9 +25,8 @@ class MainViewModel @Inject constructor(private val useCase: WeatherUseCase) : V
         return useCase.getWeatherData(city).asLiveData()
     }
 
-
-    fun getImage(prompt: String): LiveData<ResultData<ImageModel>> {
-        return useCase.getImage(prompt).asLiveData()
+    fun getImage(city: String, condition: String): LiveData<ResultData<ImageModel>> {
+        return useCase.getImage(city,condition).asLiveData()
     }
 
     fun correctLocation(loc: String): LiveData<ResultData<CorrectionModel>> {

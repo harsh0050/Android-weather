@@ -5,6 +5,6 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 
 interface ImageGenerationService {
-    @GET("api/images/{prompt}")
-    suspend fun getImage(@Path("prompt") prompt: String) : ImageModel?
+    @GET("api/images/{city}/{condition}")
+    suspend fun getImage(@Path("city") city: String,@Path("condition") condition: String) : ImageModel?
 }

@@ -30,10 +30,10 @@ class WeatherUseCase @Inject constructor(
         }
     }
 
-    fun getImage(prompt: String): Flow<ResultData<ImageModel>> {
+    fun getImage(city: String, condition: String): Flow<ResultData<ImageModel>> {
         val flow= flow {
             emit(ResultData.Loading)
-            val imageModel = weatherRepository.getImage(prompt)
+            val imageModel = weatherRepository.getImage(city, condition)
 
             if (imageModel == null) {
                 emit(ResultData.Failed())

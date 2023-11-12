@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<MainViewModel>()
     private lateinit var binding: ActivityMainBinding
     private lateinit var connectivityManager: ConnectivityManager
-    private lateinit var locationLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,7 +42,6 @@ class MainActivity : ComponentActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //initialization
         binding.progressBar.visibility = View.GONE
 
         connectivityManager =
@@ -54,7 +53,41 @@ class MainActivity : ComponentActivity() {
             ArrayList<String>()
         )
         binding.locationEditText.setAdapter(adapter)
-        locationLauncher =
+
+        initializeLocPermissionLauncher()
+
+
+        binding.enableSuggestionSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                viewModel.enableCitiesSuggestion(applicationContext, adapter)
+            } else {
+                viewModel.disableCitiesSuggestion(adapter)
+            }
+        }
+
+        binding.searchButton.setOnClickListener {
+            val inputLocation = binding.locationEditText.text.toString()
+
+            if (connectivityManager.activeNetwork != null) {
+                if (inputLocation.isNotBlank()) {
+                    checkGetAndSetWeatherData(inputLocation)
+                } else {
+                    Toast.makeText(applicationContext, "Type Something.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(applicationContext, "Connect to Internet", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+
+        binding.currentLocationButton.setOnClickListener {
+            getAndSetCurrentLocationWeather()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun initializeLocPermissionLauncher() {
+        locationPermissionLauncher =
             registerForActivityResult(
                 ActivityResultContracts.RequestMultiplePermissions()
             ) { result ->
@@ -72,7 +105,7 @@ class MainActivity : ComponentActivity() {
                     service.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                         .addOnSuccessListener { location ->
                             if (location != null)
-                                setFinalWeatherData(
+                                getAndSetWeatherData(
                                     "${location.latitude},${location.longitude}",
                                     true
                                 )
@@ -91,45 +124,14 @@ class MainActivity : ComponentActivity() {
                         }
                 }
             }
-
-
-        //listeners
-        binding.enableSuggestionSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                viewModel.enableCitiesSuggestion(applicationContext, adapter)
-            } else {
-                viewModel.disableCitiesSuggestion(adapter)
-            }
-        }
-
-        binding.searchButton.setOnClickListener {
-            val inputLocation = binding.locationEditText.text.toString()
-
-            if (connectivityManager.activeNetwork != null) {
-                if (inputLocation.isNotBlank()) {
-                    setWeatherData(inputLocation)
-                } else {
-                    Toast.makeText(applicationContext, "Type Something.", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                Toast.makeText(applicationContext, "Connect to Internet", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
-
-        binding.currentLocationButton.setOnClickListener {
-            getCurrentLocationWeather()
-        }
     }
 
-    private fun setWeatherData(inputLocation: String) {
-        //corrects the input location before calling setFinalWeatherData
-        //called when search button is clicked
+    private fun checkGetAndSetWeatherData(inputLocation: String) {
         viewModel.correctLocation(inputLocation).observe(this) {
             when (it) {
                 is ResultData.Failed -> {
                     binding.progressBar.visibility = View.GONE
-                    setFinalWeatherData(inputLocation, false)
+                    getAndSetWeatherData(inputLocation, false)
                 }
 
                 is ResultData.Loading -> {
@@ -138,13 +140,13 @@ class MainActivity : ComponentActivity() {
 
                 is ResultData.Success -> {
                     binding.progressBar.visibility = View.GONE
-                    setFinalWeatherData(it.data!!.location, false)
+                    getAndSetWeatherData(it.data!!.location, false)
                 }
             }
         }
     }
 
-    private fun getCurrentLocationWeather() {
+    private fun getAndSetCurrentLocationWeather() {
         val locationRequest = LocationRequest
             .Builder(Priority.PRIORITY_LOW_POWER, 10000)
             .build()
@@ -159,14 +161,14 @@ class MainActivity : ComponentActivity() {
             }
         }.addOnSuccessListener {
             if (connectivityManager.activeNetwork != null)
-                locationLauncher.launch(REQUIRED_PERMISSIONS)
+                locationPermissionLauncher.launch(REQUIRED_PERMISSIONS)
             else
                 Toast.makeText(applicationContext, "Connect to Internet", Toast.LENGTH_SHORT)
                     .show()
         }
     }
 
-    private fun setFinalWeatherData(location: String, isCurrentLocation: Boolean) {
+    private fun getAndSetWeatherData(location: String, isCurrentLocation: Boolean) {
         viewModel.getWeatherData(location).observe(this) {
             when (it) {
                 is ResultData.Success -> {
@@ -179,28 +181,27 @@ class MainActivity : ComponentActivity() {
                         ?.get(0)
                         ?.toFloat()
                         ?.toInt() ?: 0)
-                    val weatherText = it.data?.current?.condition?.text.toString()//cloudy
+                    val condition = it.data?.current?.condition?.text.toString()//cloudy
                     val weatherIcon = "https:" + it.data?.current?.condition?.icon
 
-                    val name = it.data?.location?.name?.let{str->
-                        if(str.isNotBlank()){
-                            "$str, "
-                        }else{
-                            str
-                        }
+                    val city = it.data?.location?.name.orEmpty()
+                    val region = it.data?.location?.region.orEmpty()
+                    val country = it.data?.location?.country.orEmpty()
+
+                    var displayLocation = ""
+                    if (city.isNotEmpty()) {
+                        displayLocation += "$city, "
                     }
-                    val region = it.data?.location?.region?.let{str->
-                        if(str.isNotBlank()){
-                            "$str, "
-                        }else{
-                            str
-                        }
+                    if (region.isNotEmpty()) {
+                        displayLocation += "$region, "
                     }
-                    val displayLocation =
-                        "$name$region${it.data?.location?.country}"
+                    if (country.isNotEmpty()) {
+                        displayLocation += country
+                    }
+
 
                     binding.degreesTextView.text = getString(R.string.temperature, tempC, tempF)
-                    binding.weatherText.text = getString(R.string.weather_text, weatherText)
+                    binding.weatherText.text = getString(R.string.weather_text, condition)
                     binding.showingResultTextView.text =
                         getString(R.string.showing_results_for, displayLocation)
 
@@ -210,9 +211,9 @@ class MainActivity : ComponentActivity() {
 
                     binding.progressBar.visibility = View.GONE
                     if (!isCurrentLocation) {
-                        generateImage(weatherText)
+                        getGeneratedImage(city, condition)
                     } else {
-                        setupImageIntoWeatherImageView(R.drawable.look_outside)
+                        setImageIntoWeatherImageView(R.drawable.look_outside)
                     }
                 }
 
@@ -235,16 +236,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun generateImage(prompt: String) {
-        var imgPrompt = prompt
-        if(imgPrompt == "sunny"){
-            imgPrompt = "sunny sky"
-        }
-        viewModel.getImage(formatText("$imgPrompt weather")).observe(this) {
+    private fun getGeneratedImage(city: String, condition: String) {
+        viewModel.getImage(formatText(city), formatText(condition)).observe(this) {
             when (it) {
                 is ResultData.Failed -> {
                     binding.progressBar.visibility = View.GONE
-                    setupImageIntoWeatherImageView(R.drawable.cat)
+                    setImageIntoWeatherImageView(R.drawable.cat)
                 }
 
                 is ResultData.Loading -> {
@@ -253,13 +250,13 @@ class MainActivity : ComponentActivity() {
 
                 is ResultData.Success -> {
                     binding.progressBar.visibility = View.GONE
-                    setupImageIntoWeatherImageView(it.data!!.url)
+                    setImageIntoWeatherImageView(it.data!!.url)
                 }
             }
         }
     }
 
-    private fun setupImageIntoWeatherImageView(url: String) {
+    private fun setImageIntoWeatherImageView(url: String) {
         binding.progressBar.visibility = View.VISIBLE
         Glide.with(applicationContext).load(url).centerCrop()
             .listener(object : RequestListener<Drawable> {
@@ -271,7 +268,7 @@ class MainActivity : ComponentActivity() {
                 ): Boolean {
                     binding.progressBar.visibility = View.GONE
                     Log.i("debug", "onLoadFailed: ${e?.causes}")
-                    setupImageIntoWeatherImageView(R.drawable.cat)
+                    setImageIntoWeatherImageView(R.drawable.cat)
                     return false
                 }
 
@@ -288,7 +285,7 @@ class MainActivity : ComponentActivity() {
             }).into(binding.weatherImageView)
     }
 
-    private fun setupImageIntoWeatherImageView(resId: Int) {
+    private fun setImageIntoWeatherImageView(resId: Int) {
         binding.progressBar.visibility = View.VISIBLE
         Glide.with(applicationContext).load(resId)
             .addListener(object : RequestListener<Drawable> {

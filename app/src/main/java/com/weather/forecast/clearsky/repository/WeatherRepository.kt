@@ -21,7 +21,7 @@ class WeatherRepository @Inject constructor(
         return autoCorrectionService.getCorrected(location)
     }
 
-    suspend fun getImage(prompt: String): ImageModel? {
-        return imageGenerationService.getImage(prompt)
+    suspend fun getImage(city: String, condition: String): ImageModel? {
+        return imageGenerationService.getImage(city, condition)
     }
 }
