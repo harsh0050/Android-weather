@@ -1,7 +1,10 @@
 package com.weather.forecast.clearsky.usecase
 
+import androidx.lifecycle.LiveData
+import com.weather.forecast.clearsky.model.City
 import com.weather.forecast.clearsky.model.CorrectionModel
 import com.weather.forecast.clearsky.model.ImageModel
+import com.weather.forecast.clearsky.model.TrackedCityWeather
 import com.weather.forecast.clearsky.model.WeatherModel
 import com.weather.forecast.clearsky.network.ResultData
 import com.weather.forecast.clearsky.repository.WeatherRepository
@@ -61,4 +64,25 @@ class WeatherUseCase @Inject constructor(
         }
         return flow
     }
+
+    suspend fun getCitiesList(): List<City> {
+        return weatherRepository.getCitiesList()
+    }
+
+    fun getTrackedCities(): LiveData<List<TrackedCityWeather>> {
+        return weatherRepository.getTrackedCities()
+    }
+    suspend fun trackCity(city: TrackedCityWeather){
+        weatherRepository.trackCity(city)
+    }
+    suspend fun removeCity(city: TrackedCityWeather){
+        weatherRepository.removeCity(city)
+    }
+    suspend fun updateWeather(newCityData: TrackedCityWeather){
+        weatherRepository.updateWeather(newCityData)
+    }
+    suspend fun getTrackedCitiesCount(): Int {
+        return weatherRepository.getTrackedCitiesCount()
+    }
+
 }

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.weather.forecast.clearsky.R
 import com.weather.forecast.clearsky.model.CorrectionModel
 import com.weather.forecast.clearsky.model.ImageModel
+import com.weather.forecast.clearsky.model.TrackedCityWeather
 import com.weather.forecast.clearsky.model.WeatherModel
 import com.weather.forecast.clearsky.network.ResultData
 import com.weather.forecast.clearsky.usecase.WeatherUseCase
@@ -21,6 +22,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val useCase: WeatherUseCase) : ViewModel() {
+    var visibleTextView: Int = R.id.firstTempTextView
+    var invisibleTextView: Int = R.id.secondTempTextView
+    var currentPage = 0
+
     fun getWeatherData(city: String): LiveData<ResultData<WeatherModel>> {
         return useCase.getWeatherData(city).asLiveData()
     }
@@ -52,5 +57,34 @@ class MainViewModel @Inject constructor(private val useCase: WeatherUseCase) : V
     fun disableCitiesSuggestion(adapter: ArrayAdapter<String>){
         adapter.clear()
     }
+
+    fun getTrackedCities(): LiveData<List<TrackedCityWeather>> {
+        return useCase.getTrackedCities()
+    }
+
+    fun trackCity(city: TrackedCityWeather){
+        viewModelScope.launch {
+            useCase.trackCity(city)
+        }
+    }
+    suspend fun getTrackedCitiesCount(): Int{
+        return useCase.getTrackedCitiesCount()
+    }
+
+    fun getInvisibleTextViewId(): Int {
+        return invisibleTextView
+    }
+
+    fun getVisibleTextViewId(): Int{
+        return visibleTextView
+    }
+
+    fun switchTextViews(){
+        val temp = visibleTextView
+        visibleTextView = invisibleTextView
+        invisibleTextView = temp
+    }
+
+
 
 }

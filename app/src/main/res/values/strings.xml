@@ -1,12 +1,23 @@
 <resources>
     <string name="app_name">Clear Sky</string>
-    <string name="temperature">Temperature: %1$d °C / %2$d F</string>
-    <string name="weather_text">(%1$s)</string>
-    <string name="showing_results_for">Showing Results for %1$s</string>
     <string name="location">Location</string>
     <string name="weather_image">weather image</string>
     <string name="city_suggestion">City Suggestion</string>
     <string name="weather_icon">weather icon</string>
     <string name="search">search</string>
     <string name="current_location">current location</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="temperature">Temperature: %1$d °C / %2$d F</string>
+    <string name="weather_text">(%1$s)</string>
+    <string name="showing_results_for">Showing Results for %1$s</string>
+    <string name="degrees">%1$d °C</string>
+    <string name="aqi">AQI %1$d</string>
+    <string name="condition">%1$s %2$d°/%3$d°</string>
+    <string name="sunrise_string">Sunrise</string>
+    <string name="sunset_string">Sunset</string>
+    <string name="humidity_string">Humidity</string>
+    <string name="real_feel_string">Real feel</string>
+    <string name="uv_string">UV</string>
+    <string name="pressure_string">Pressure</string>
+    <string name="chance_of_rain_string">Chance of rain</string>
 </resources>

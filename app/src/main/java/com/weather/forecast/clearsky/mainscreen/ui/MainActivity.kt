@@ -1,17 +1,21 @@
 package com.weather.forecast.clearsky.mainscreen.ui
 
+import android.animation.AnimatorInflater
 import android.annotation.SuppressLint
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
@@ -22,25 +26,39 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
+import com.google.android.material.tabs.TabLayoutMediator
 import com.weather.forecast.clearsky.R
+import com.weather.forecast.clearsky.adapters.MainViewPagerAdapter
 import com.weather.forecast.clearsky.databinding.ActivityMainBinding
+import com.weather.forecast.clearsky.databinding.ActivityMainWtpagerBinding
 import com.weather.forecast.clearsky.mainscreen.viewmodel.MainViewModel
+import com.weather.forecast.clearsky.model.TrackedCityWeather
 import com.weather.forecast.clearsky.network.ResultData
+import com.weather.forecast.clearsky.utils.CustomOnTouchListener
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.io.InputStream
+import java.net.URL
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val viewModel by viewModels<MainViewModel>()
     private lateinit var binding: ActivityMainBinding
+    private lateinit var newBinding: ActivityMainWtpagerBinding
     private lateinit var connectivityManager: ConnectivityManager
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
 
-    @SuppressLint("MissingPermission")
+    @OptIn(DelicateCoroutinesApi::class)
+    @SuppressLint("MissingPermission", "ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        newBinding = ActivityMainWtpagerBinding.inflate(layoutInflater)
+//        setContentView(binding.root)
+        setContentView(newBinding.root)
 
         binding.progressBar.visibility = View.GONE
 
@@ -80,8 +98,130 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
+        newBinding.addBtn.setOnClickListener {
+            onAddButtonPressed()
+        }
+
+
         binding.currentLocationButton.setOnClickListener {
             getAndSetCurrentLocationWeather()
+        }
+        val viewPagerAdapter = MainViewPagerAdapter(supportFragmentManager, lifecycle)
+        newBinding.viewPager.adapter = viewPagerAdapter
+        newBinding.viewPager.setCurrentItem(viewModel.currentPage, true)
+
+        var trackedCities: List<TrackedCityWeather> = ArrayList()
+        viewModel.getTrackedCities().observe(this) {
+            trackedCities = it
+            viewPagerAdapter.setTrackedCities(it)
+        }
+
+        TabLayoutMediator(
+            newBinding.tabLayout, newBinding.viewPager
+        ) { _, _ ->
+        }.attach()
+
+        newBinding.viewPager.registerOnPageChangeCallback(object :
+            ViewPager2.OnPageChangeCallback() {
+
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                val prevPosition = viewModel.currentPage
+                viewModel.currentPage = position
+//                println(position)
+                val currCity = trackedCities[position]
+                newBinding.appbarTitle.text = currCity.name
+                newBinding.aqiBtn.text = getString(R.string.aqi, currCity.airQuality.pm2_5.toInt())
+
+                Log.i(TAG, "onPageSelected: $position")
+                changeTempText(prevPosition, position, currCity.temp.toInt())
+//                newBinding.firstTempTextView.text =
+//                    getString(R.string.degrees, currCity.temp.toInt())
+                newBinding.conditionTextView.text = getString(
+                    R.string.condition,
+                    currCity.condition.text,
+                    currCity.maxTemp.toInt(),
+                    currCity.minTemp.toInt()
+                )
+
+
+            }
+        })
+        newBinding.swipableForeground.setOnTouchListener(
+            CustomOnTouchListener(
+                applicationContext,
+                newBinding.viewPager
+            )
+        )
+
+    }
+
+    fun changeTempText(oldPosition: Int, newPosition: Int, newTemp: Int) {
+        val invisibleTextView: TextView = findViewById(viewModel.getInvisibleTextViewId())
+        val visibleTextView: TextView = findViewById(viewModel.getVisibleTextViewId())
+        if(oldPosition==newPosition){
+            visibleTextView.text = getString(R.string.degrees, newTemp)
+            return
+        }
+
+        invisibleTextView.text = getString(R.string.degrees, newTemp)
+
+        if (oldPosition < newPosition) {
+            val disappearAnim =
+                AnimatorInflater.loadAnimator(applicationContext, R.animator.left_view_disappear)
+                    .apply {
+                        setTarget(visibleTextView)
+                    }
+            val appearAnim =
+                AnimatorInflater.loadAnimator(applicationContext, R.animator.right_view_appear)
+                    .apply {
+                        setTarget(invisibleTextView)
+                        startDelay = 200
+                    }
+            disappearAnim.start()
+            appearAnim.start()
+        } else {
+            val disappearAnim =
+                AnimatorInflater.loadAnimator(applicationContext, R.animator.right_view_disappear)
+                    .apply {
+                        setTarget(visibleTextView)
+                    }
+            val appearAnim =
+                AnimatorInflater.loadAnimator(applicationContext, R.animator.left_view_appear)
+                    .apply {
+                        setTarget(invisibleTextView)
+                    }
+            disappearAnim.start()
+            appearAnim.start()
+        }
+        viewModel.switchTextViews()
+
+    }
+
+    private fun onAddButtonPressed() {
+        GlobalScope.launch {
+            val count = viewModel.getTrackedCitiesCount()
+            val inputStream =
+                URL("https://buffer.com/library/content/images/size/w1000/2023/10/free-images-for-commercial-use--20-.png").content as InputStream
+            val map = BitmapFactory.decodeStream(inputStream)
+            runOnUiThread {
+                if (count < 10) {
+                    viewModel.getWeatherData("new delhi").observe(this@MainActivity) {
+                        if (it is ResultData.Success && it.data != null) {
+//
+//                                runOnUiThread {
+//                                    newBinding.root.background = BitmapDrawable(resources, map)
+//                                }
+                            val city = TrackedCityWeather.newInstance(it.data, map)
+                            viewModel.trackCity(city)
+                        }
+                    }
+                } else {
+                    Toast.makeText(applicationContext, "Remove a city", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
         }
     }
 
@@ -330,7 +470,9 @@ class MainActivity : ComponentActivity() {
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
             android.Manifest.permission.ACCESS_FINE_LOCATION
         )
+        const val TAG = "MainActivity"
     }
+
 
 }
 
