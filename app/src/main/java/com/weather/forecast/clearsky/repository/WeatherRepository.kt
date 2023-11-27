@@ -20,8 +20,11 @@ class WeatherRepository @Inject constructor(
     private val cityDao: CityDao,
     private val trackedCityDao: TrackedCityDao
 ) {
-    suspend fun getWeatherData(city: String): WeatherModel? {
-        return weatherApiService.getWeatherData(city)
+    suspend fun getWeatherData(id: String): WeatherModel? {
+        return weatherApiService.getWeatherData(id)
+    }
+    suspend fun getCityId(city: String): Int?{
+        return weatherApiService.searchCity(city)?.get(0)?.id
     }
 
     suspend fun getCorrected(location: String): CorrectionModel? {
@@ -32,8 +35,11 @@ class WeatherRepository @Inject constructor(
         return imageGenerationService.getImage(city, condition)
     }
 
-    suspend fun getCitiesList(): List<City> {
+    fun getCitiesList(): LiveData<List<City>> {
         return cityDao.getCitiesData()
+    }
+    suspend fun setTrackStatus(id: Int){
+        cityDao.setTrackStatus(id)
     }
 
     fun getTrackedCities(): LiveData<List<TrackedCityWeather>> {

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.weather.forecast.clearsky.R
+import com.weather.forecast.clearsky.model.City
 import com.weather.forecast.clearsky.model.CorrectionModel
 import com.weather.forecast.clearsky.model.ImageModel
 import com.weather.forecast.clearsky.model.TrackedCityWeather
@@ -22,12 +23,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val useCase: WeatherUseCase) : ViewModel() {
-    var visibleTextView: Int = R.id.firstTempTextView
-    var invisibleTextView: Int = R.id.secondTempTextView
-    var currentPage = 0
+    private var visibleTextView: Int = R.id.firstTempTextView
+    private var invisibleTextView: Int = R.id.secondTempTextView
 
-    fun getWeatherData(city: String): LiveData<ResultData<WeatherModel>> {
-        return useCase.getWeatherData(city).asLiveData()
+    fun getWeatherData(id: Int): LiveData<ResultData<WeatherModel>> {
+        return useCase.getWeatherData("id:$id").asLiveData()
+    }
+    fun getCityId(city: String): LiveData<ResultData<Int>> {
+        return useCase.getCityId(city).asLiveData()
     }
 
     fun getImage(city: String, condition: String): LiveData<ResultData<ImageModel>> {
@@ -62,9 +65,10 @@ class MainViewModel @Inject constructor(private val useCase: WeatherUseCase) : V
         return useCase.getTrackedCities()
     }
 
-    fun trackCity(city: TrackedCityWeather){
+    fun trackCity(city: TrackedCityWeather, id: Int){
         viewModelScope.launch {
             useCase.trackCity(city)
+            useCase.setTrackStatus(id)
         }
     }
     suspend fun getTrackedCitiesCount(): Int{
@@ -85,6 +89,9 @@ class MainViewModel @Inject constructor(private val useCase: WeatherUseCase) : V
         invisibleTextView = temp
     }
 
+    fun getSearchCities(): LiveData<List<City>> {
+        return useCase.getCitiesList()
+    }
 
 
 }

@@ -20,4 +20,7 @@
     <string name="uv_string">UV</string>
     <string name="pressure_string">Pressure</string>
     <string name="chance_of_rain_string">Chance of rain</string>
+    <string name="cancel"><u>Cancel</u></string>
+    <string name="no_result_found">No result found.</string>
+    <string name="added"><![CDATA[Added >]]></string>
 </resources>

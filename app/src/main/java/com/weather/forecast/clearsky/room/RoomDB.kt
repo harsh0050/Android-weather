@@ -26,7 +26,7 @@ abstract class RoomDB : RoomDatabase() {
             }
             INSTANCE = Room.databaseBuilder(context, RoomDB::class.java, "database.db")
                 .createFromAsset("room_database.db")
-//                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration()
                 .addTypeConverter(CustomTypeConverters())
                 .build()
             return INSTANCE!!

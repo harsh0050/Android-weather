@@ -39,5 +39,4 @@ class CustomTypeConverters {
         return Gson().fromJson(json, Bitmap::class.java)
     }
 
-
 }

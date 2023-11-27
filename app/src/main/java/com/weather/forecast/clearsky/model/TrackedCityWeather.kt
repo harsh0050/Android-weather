@@ -1,12 +1,12 @@
 package com.weather.forecast.clearsky.model
 
-import android.graphics.Bitmap
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "tracked_city_weather_table")
 data class TrackedCityWeather(
+    @ColumnInfo(name = "id") @PrimaryKey var id: Int,
     @ColumnInfo(name = "name") var name: String,
     @ColumnInfo(name = "lat") var lat: Float,
     @ColumnInfo(name = "lng") var lng: Float,
@@ -26,11 +26,10 @@ data class TrackedCityWeather(
     @ColumnInfo(name = "sunrise") var sunrise: String,
     @ColumnInfo(name = "sunset") var sunset: String,
     @ColumnInfo(name = "added_timestamp") val addedTimestamp: Long,
-    @ColumnInfo(name = "image_bitmap") var imageBitmap: Bitmap
+    @ColumnInfo(name = "image_byte_array") var imageByteArray: ByteArray
 ) {
 
-    @ColumnInfo(name = "id") @PrimaryKey(autoGenerate = true) var id: Int = 0
-    fun updateWeatherData(newWeatherModel: WeatherModel, imageBitmap: Bitmap){
+    fun updateWeatherData(newWeatherModel: WeatherModel, imageByteArray: ByteArray){
         this.name = newWeatherModel.location.name
         this.lat = newWeatherModel.location.lat.toFloat()
         this.lng = newWeatherModel.location.lon.toFloat()
@@ -49,11 +48,14 @@ data class TrackedCityWeather(
         this.chanceOfRain = newWeatherModel.forecast.forecastday[0].day.daily_chance_of_rain
         this.sunrise = newWeatherModel.forecast.forecastday[0].astro.sunrise
         this.sunset = newWeatherModel.forecast.forecastday[0].astro.sunset
-        this.imageBitmap = imageBitmap
+        this.imageByteArray = imageByteArray
     }
+
+
     companion object {
-        fun newInstance(weatherModel: WeatherModel, imageBitmap: Bitmap): TrackedCityWeather {
+        fun newInstance(apiCityId: Int, weatherModel: WeatherModel, imageByteArray: ByteArray): TrackedCityWeather {
             return TrackedCityWeather(
+                apiCityId,
                 weatherModel.location.name,
                 weatherModel.location.lat.toFloat(),
                 weatherModel.location.lon.toFloat(),
@@ -73,8 +75,24 @@ data class TrackedCityWeather(
                 weatherModel.forecast.forecastday[0].astro.sunrise,
                 weatherModel.forecast.forecastday[0].astro.sunset,
                 System.currentTimeMillis(),
-                imageBitmap
+                imageByteArray
             )
         }
+    }
+
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as TrackedCityWeather
+
+        if (id != other.id) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return id
     }
 }

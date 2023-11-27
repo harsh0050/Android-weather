@@ -1,4 +1,4 @@
-package com.weather.forecast.clearsky.mainscreen.ui
+package com.weather.forecast.clearsky.mainscreen.ui.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -20,16 +20,16 @@ class WeatherDisplayFragment(private val weatherData: TrackedCityWeather) : Frag
         savedInstanceState: Bundle?,
     ): View {
         binding = FragmentWeatherDisplayBinding.inflate(inflater)
-        binding.windDirectionTextView.text = expandDirection(weatherData.windDirection)
-        binding.windSpeedTextView.text = weatherData.windSpeed.toString()+"km/h"
+        binding.windDirectionTextview.text = expandDirection(weatherData.windDirection)
+        binding.windSpeedTextview.text = weatherData.windSpeed.toString()+"km/h"
         binding.compassNeedle.rotation = weatherData.windDegree.toFloat()
-        binding.sunriseTextView.text = weatherData.sunrise
-        binding.sunsetTextView.text = weatherData.sunset
-        binding.humidityTextView.text = weatherData.humidity.toString()+"%"
-        binding.realFeelTextView.text = weatherData.realFeel.toString()+"°"
-        binding.uvTextView.text = weatherData.uv.toString()
-        binding.pressureTextView.text = weatherData.pressureMb.toString()+" mbar"
-        binding.chanceOfRainTextView.text = weatherData.chanceOfRain.toString()+"%"
+        binding.sunriseTextview.text = weatherData.sunrise
+        binding.sunsetTextview.text = weatherData.sunset
+        binding.humidityTextview.text = weatherData.humidity.toString()+"%"
+        binding.realFeelTextview.text = weatherData.realFeel.toString()+"°"
+        binding.uvTextview.text = weatherData.uv.toString()
+        binding.pressureTextview.text = weatherData.pressureMb.toString()+" mbar"
+        binding.chanceOfRainTextview.text = weatherData.chanceOfRain.toString()+"%"
         return binding.root
     }
     private fun expandDirection(direction: String): String {

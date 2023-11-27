@@ -14,13 +14,13 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class WeatherUseCase @Inject constructor(
-    private val weatherRepository: WeatherRepository
+    private val weatherRepository: WeatherRepository,
 ) {
-    fun getWeatherData(city: String): Flow<ResultData<WeatherModel>> {
+    fun getWeatherData(id: String): Flow<ResultData<WeatherModel>> {
         return flow {
             emit(ResultData.Loading)
 
-            val weatherModel = weatherRepository.getWeatherData(city)
+            val weatherModel = weatherRepository.getWeatherData(id)
 
             val resultData = if (weatherModel == null) {
                 ResultData.Failed()
@@ -33,8 +33,25 @@ class WeatherUseCase @Inject constructor(
         }
     }
 
+    fun getCityId(city: String): Flow<ResultData<Int>> {
+        return flow {
+            emit(ResultData.Loading)
+
+            val cityId = weatherRepository.getCityId(city)
+
+            val resultData = if (cityId == null) {
+                ResultData.Failed()
+            } else {
+                ResultData.Success(cityId)
+            }
+            emit(resultData)
+        }.catch {
+            emit(ResultData.Failed())
+        }
+    }
+
     fun getImage(city: String, condition: String): Flow<ResultData<ImageModel>> {
-        val flow= flow {
+        val flow = flow {
             emit(ResultData.Loading)
             val imageModel = weatherRepository.getImage(city, condition)
 
@@ -50,7 +67,7 @@ class WeatherUseCase @Inject constructor(
     }
 
     fun correctLocation(location: String): Flow<ResultData<CorrectionModel>> {
-        val flow= flow {
+        val flow = flow {
             emit(ResultData.Loading)
             val correctionModel = weatherRepository.getCorrected(location)
 
@@ -65,22 +82,31 @@ class WeatherUseCase @Inject constructor(
         return flow
     }
 
-    suspend fun getCitiesList(): List<City> {
+    fun getCitiesList(): LiveData<List<City>> {
         return weatherRepository.getCitiesList()
     }
+
+    suspend fun setTrackStatus(id: Int) {
+        weatherRepository.setTrackStatus(id)
+    }
+
 
     fun getTrackedCities(): LiveData<List<TrackedCityWeather>> {
         return weatherRepository.getTrackedCities()
     }
-    suspend fun trackCity(city: TrackedCityWeather){
+
+    suspend fun trackCity(city: TrackedCityWeather) {
         weatherRepository.trackCity(city)
     }
-    suspend fun removeCity(city: TrackedCityWeather){
+
+    suspend fun removeCity(city: TrackedCityWeather) {
         weatherRepository.removeCity(city)
     }
-    suspend fun updateWeather(newCityData: TrackedCityWeather){
+
+    suspend fun updateWeather(newCityData: TrackedCityWeather) {
         weatherRepository.updateWeather(newCityData)
     }
+
     suspend fun getTrackedCitiesCount(): Int {
         return weatherRepository.getTrackedCitiesCount()
     }

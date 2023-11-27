@@ -10,5 +10,7 @@ data class City(
     @ColumnInfo(name = "lat") val lat: Float,
     @ColumnInfo(name = "lng") val lng: Float,
     @ColumnInfo(name = "country") val country: String,
-    @ColumnInfo(name = "id") @PrimaryKey(autoGenerate = false) val id: Int
-)
+    @ColumnInfo(name = "id") @PrimaryKey(autoGenerate = false) val id: Int,
+    @ColumnInfo(name = "isTracked") val isTracked: Boolean
+){
+}

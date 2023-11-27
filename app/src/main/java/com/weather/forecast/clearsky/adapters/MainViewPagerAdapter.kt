@@ -4,7 +4,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.weather.forecast.clearsky.mainscreen.ui.WeatherDisplayFragment
+import com.weather.forecast.clearsky.mainscreen.ui.fragment.WeatherDisplayFragment
 import com.weather.forecast.clearsky.model.TrackedCityWeather
 
 class MainViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle) :
