@@ -12,8 +12,11 @@ import com.weather.forecast.clearsky.model.TrackedCityWeather
 @Dao
 interface TrackedCityDao {
     @Query("SELECT * FROM tracked_city_weather_table ORDER BY added_timestamp")
-    fun getTrackedCities(): LiveData<List<TrackedCityWeather>>
-    @Insert(onConflict = OnConflictStrategy.FAIL)
+    fun getTrackedCitiesLiveData(): LiveData<List<TrackedCityWeather>>
+
+    @Query("SELECT * FROM tracked_city_weather_table ORDER BY added_timestamp")
+    suspend fun getTrackedCities(): List<TrackedCityWeather>
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun trackCity(city: TrackedCityWeather)
     @Delete
     suspend fun removeCity(city: TrackedCityWeather)

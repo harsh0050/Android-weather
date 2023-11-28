@@ -42,9 +42,13 @@ class WeatherRepository @Inject constructor(
         cityDao.setTrackStatus(id)
     }
 
-    fun getTrackedCities(): LiveData<List<TrackedCityWeather>> {
+    fun getTrackedCitiesLiveData(): LiveData<List<TrackedCityWeather>> {
+        return trackedCityDao.getTrackedCitiesLiveData()
+    }
+    suspend fun getTrackedCities(): List<TrackedCityWeather> {
         return trackedCityDao.getTrackedCities()
     }
+
     suspend fun trackCity(city: TrackedCityWeather){
         trackedCityDao.trackCity(city)
     }

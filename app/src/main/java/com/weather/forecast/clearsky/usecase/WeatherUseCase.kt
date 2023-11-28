@@ -16,55 +16,65 @@ import javax.inject.Inject
 class WeatherUseCase @Inject constructor(
     private val weatherRepository: WeatherRepository,
 ) {
-    fun getWeatherData(id: String): Flow<ResultData<WeatherModel>> {
-        return flow {
-            emit(ResultData.Loading)
-
-            val weatherModel = weatherRepository.getWeatherData(id)
-
-            val resultData = if (weatherModel == null) {
-                ResultData.Failed()
-            } else {
-                ResultData.Success(weatherModel)
-            }
-            emit(resultData)
-        }.catch {
-            emit(ResultData.Failed())
-        }
+    suspend fun getWeatherData(id: String): WeatherModel? {
+        return weatherRepository.getWeatherData(id)
+    }
+    suspend fun getCityId(city: String): Int? {
+        return weatherRepository.getCityId(city)
     }
 
-    fun getCityId(city: String): Flow<ResultData<Int>> {
-        return flow {
-            emit(ResultData.Loading)
-
-            val cityId = weatherRepository.getCityId(city)
-
-            val resultData = if (cityId == null) {
-                ResultData.Failed()
-            } else {
-                ResultData.Success(cityId)
-            }
-            emit(resultData)
-        }.catch {
-            emit(ResultData.Failed())
-        }
+    suspend fun getImage(city: String, condition: String): ImageModel? {
+        return weatherRepository.getImage(city,condition)
     }
+//    fun getWeatherData(id: String): Flow<ResultData<WeatherModel>> {
+//        return flow {
+//            emit(ResultData.Loading)
+//
+//            val weatherModel = weatherRepository.getWeatherData(id)
+//
+//            val resultData = if (weatherModel == null) {
+//                ResultData.Failed()
+//            } else {
+//                ResultData.Success(weatherModel)
+//            }
+//            emit(resultData)
+//        }.catch {
+//            emit(ResultData.Failed())
+//        }
+//    }
 
-    fun getImage(city: String, condition: String): Flow<ResultData<ImageModel>> {
-        val flow = flow {
-            emit(ResultData.Loading)
-            val imageModel = weatherRepository.getImage(city, condition)
-
-            if (imageModel == null) {
-                emit(ResultData.Failed())
-            } else {
-                emit(ResultData.Success(imageModel))
-            }
-        }.catch {
-            emit(ResultData.Failed())
-        }
-        return flow
-    }
+//    fun getCityId(city: String): Flow<ResultData<Int>> {
+//        return flow {
+//            emit(ResultData.Loading)
+//
+//            val cityId = weatherRepository.getCityId(city)
+//
+//            val resultData = if (cityId == null) {
+//                ResultData.Failed()
+//            } else {
+//                ResultData.Success(cityId)
+//            }
+//            emit(resultData)
+//        }.catch {
+//            emit(ResultData.Failed())
+//        }
+//    }
+//
+//    fun getImage(city: String, condition: String): Flow<ResultData<ImageModel>> {
+//        val flow = flow {
+//            emit(ResultData.Loading)
+//            val imageModel = weatherRepository.getImage(city, condition)
+//
+//            if (imageModel == null) {
+//                emit(ResultData.Failed())
+//            } else {
+//                emit(ResultData.Success(imageModel))
+//            }
+//        }.catch {
+//            emit(ResultData.Failed())
+//        }
+//        return flow
+//    }
 
     fun correctLocation(location: String): Flow<ResultData<CorrectionModel>> {
         val flow = flow {
@@ -91,7 +101,11 @@ class WeatherUseCase @Inject constructor(
     }
 
 
-    fun getTrackedCities(): LiveData<List<TrackedCityWeather>> {
+    fun getTrackedCitiesLiveData(): LiveData<List<TrackedCityWeather>> {
+        return weatherRepository.getTrackedCitiesLiveData()
+    }
+
+    suspend fun getTrackedCities(): List<TrackedCityWeather> {
         return weatherRepository.getTrackedCities()
     }
 

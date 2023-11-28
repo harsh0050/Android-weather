@@ -23,4 +23,9 @@
     <string name="cancel"><u>Cancel</u></string>
     <string name="no_result_found">No result found.</string>
     <string name="added"><![CDATA[Added >]]></string>
+    <string name="updating_weather">Reload weather</string>
+    <string name="reload_failed">Reload failed.</string>
+    <string name="reload_in_progress">Reloading in progress…</string>
+    <string name="update_successful">Updated successfully.</string>
+
 </resources>

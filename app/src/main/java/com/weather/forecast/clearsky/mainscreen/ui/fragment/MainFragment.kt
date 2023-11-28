@@ -1,6 +1,7 @@
 package com.weather.forecast.clearsky.mainscreen.ui.fragment
 
 import android.animation.AnimatorInflater
+import android.annotation.SuppressLint
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.graphics.drawable.toDrawable
+import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -18,12 +20,21 @@ import com.weather.forecast.clearsky.adapters.MainViewPagerAdapter
 import com.weather.forecast.clearsky.databinding.FragmentMainBinding
 import com.weather.forecast.clearsky.mainscreen.viewmodel.MainViewModel
 import com.weather.forecast.clearsky.model.TrackedCityWeather
+import com.weather.forecast.clearsky.network.ResultData
 import com.weather.forecast.clearsky.utils.CustomOnTouchListener
+import com.weather.forecast.clearsky.utils.OnRefreshCallback
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
-class MainFragment : Fragment() {
+@OptIn(DelicateCoroutinesApi::class)
+class MainFragment : Fragment(), OnRefreshCallback {
     private lateinit var binding: FragmentMainBinding
     private val viewModel by activityViewModels<MainViewModel>()
     private var currentPage = 0
+    private lateinit var customOnTouchListener: CustomOnTouchListener
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
@@ -36,8 +47,23 @@ class MainFragment : Fragment() {
         binding.viewPager.adapter = viewPagerAdapter
         binding.viewPager.setCurrentItem(currentPage, true)
 
+        customOnTouchListener = CustomOnTouchListener(
+            requireContext(),
+            binding.viewPager,
+            binding.updatingText,
+            binding.tabLayout,
+            this
+        )
+
+        TabLayoutMediator(
+            binding.tabLayout, binding.viewPager
+        ) { tab, _ ->
+            tab.view.isClickable = false
+        }.attach()
+
         var trackedCities: List<TrackedCityWeather> = ArrayList()
-        viewModel.getTrackedCities().observe(viewLifecycleOwner) {
+
+        viewModel.getTrackedCitiesLiveData().observe(viewLifecycleOwner) {
             trackedCities = it
             if(trackedCities.isNotEmpty())
                 binding.aqiBtn.visibility = View.VISIBLE
@@ -46,28 +72,19 @@ class MainFragment : Fragment() {
             viewPagerAdapter.setTrackedCities(it)
         }
 
-        TabLayoutMediator(
-            binding.tabLayout, binding.viewPager
-        ) { _, _ ->
-        }.attach()
-
-
         binding.viewPager.registerOnPageChangeCallback(object :
             ViewPager2.OnPageChangeCallback() {
 
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                println("onPageSelected() $position")
                 val prevPosition = currentPage
                 currentPage = position
-//                println(position)
                 val currCity = trackedCities[position]
                 binding.appbarTitle.text = currCity.name
                 binding.aqiBtn.text = getString(R.string.aqi, currCity.airQuality.pm2_5.toInt())
 
                 //TODO animate background change
-                val imageBitmap = BitmapFactory.decodeByteArray(currCity.imageByteArray,0,currCity.imageByteArray.size)
-                binding.root.background = imageBitmap.toDrawable(resources)
+                setUpImage(currCity.imageByteArray)
 
                 changeTempText(prevPosition, position, currCity.temp.toInt())
                 binding.conditionTextView.text = getString(
@@ -79,15 +96,25 @@ class MainFragment : Fragment() {
             }
         })
         binding.swipableForeground.setOnTouchListener(
-            CustomOnTouchListener(
-                requireContext(),
-                binding.viewPager
-            )
+            //TODO check scrollY
+            customOnTouchListener
+
         )
         binding.addBtn.setOnClickListener {
             findNavController().navigate(R.id.action_MainFragment_to_ManageCitiesFragment)
         }
+
         return binding.root
+    }
+
+    private fun setUpImage(imageByteArray: ByteArray) {
+        GlobalScope.launch(Dispatchers.IO) {
+            val imageBitmap = BitmapFactory.decodeByteArray(imageByteArray,0,imageByteArray.size)
+            val imgDrawable = imageBitmap.toDrawable(resources)
+            requireActivity().runOnUiThread {
+                binding.root.background = imgDrawable
+            }
+        }
     }
 
     fun changeTempText(oldPosition: Int, newPosition: Int, newTemp: Int) {
@@ -130,7 +157,27 @@ class MainFragment : Fragment() {
             return
         }
         viewModel.switchTextViews()
+    }
 
+    override fun refresh(springAnimation: SpringAnimation) {
+        viewModel.reloadAllCities().observe(viewLifecycleOwner){
+            when(it){
+                is ResultData.Failed -> {
+                    binding.updatingText.text = getString(R.string.reload_failed)
+                    springAnimation.start()
+                    customOnTouchListener.isReloading = false
+                    //TODO
+                }
+                ResultData.Loading -> {
+                    binding.updatingText.text = getString(R.string.reload_in_progress)
+                }
+                is ResultData.Success -> {
+                    binding.updatingText.text = getString(R.string.update_successful)
+                    springAnimation.start()
+                    customOnTouchListener.isReloading = false
+                }
+            }
+        }
     }
 
 }
